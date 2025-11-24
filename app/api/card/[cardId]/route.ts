@@ -6,11 +6,13 @@ export const runtime = 'nodejs'
 
 export async function GET(
     _req: NextRequest,
-    { params }: { params: { cardId: string } },
+    { params }: { params: Promise<{ cardId: string }> },
 ) {
     try {
+        const { cardId } = await params
+
         const cards = await getAllCards()
-        const card = cards.find((c) => c.cardId === params.cardId)
+        const card = cards.find((c) => c.cardId === cardId)
 
         if (!card) {
             return NextResponse.json(
