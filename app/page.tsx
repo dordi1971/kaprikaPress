@@ -475,30 +475,32 @@ export default function HomePage() {
                 </p>
               )}
 
-              {(mintResult.imageUrl || mintResult.pdfUrl) && (
-                <div className="mt-3 space-x-3">
-                  {mintResult.imageUrl && (
-                    <a
-                      href={mintResult.imageUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-slate-100 underline"
-                    >
-                      View card PNG
-                    </a>
-                  )}
-                  {mintResult.pdfUrl && (
-                    <a
-                      href={mintResult.pdfUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm text-slate-100 underline"
-                    >
-                      Download PDF
-                    </a>
-                  )}
-                </div>
-              )}
+              {!mintResult.ipfsMetadataUrl &&
+                (mintResult.imageUrl || mintResult.pdfUrl) && (
+                  <div className="mt-3 space-x-3">
+                    {mintResult.imageUrl && (
+                      <a
+                        href={mintResult.imageUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-slate-100 underline"
+                      >
+                        View card PNG
+                      </a>
+                    )}
+                    {mintResult.pdfUrl && (
+                      <a
+                        href={mintResult.pdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-slate-100 underline"
+                      >
+                        Download PDF
+                      </a>
+                    )}
+                  </div>
+                )}
+
 
               {(mintResult.ipfsImageUrl ||
                 mintResult.ipfsPdfUrl ||

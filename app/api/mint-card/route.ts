@@ -101,8 +101,6 @@ async function createPdfFromPng(pngBuffer: Uint8Array): Promise<Buffer> {
   return Buffer.from(pdfBytes)
 }
 
-// ---------- LOCAL FILE OUTPUT (for printing etc.) ----------
-
 async function writeLocalOutputs(
   cardId: string,
   png: Uint8Array,
@@ -120,11 +118,13 @@ async function writeLocalOutputs(
     fs.writeFile(path.join(outDir, pdfName), pdf),
   ])
 
-  const imageUrl = `${baseUrl}/generated/${imageName}`
-  const pdfUrl = `${baseUrl}/generated/${pdfName}`
+  // Serve files through an API route instead of static /generated/*
+  const imageUrl = `${baseUrl}/api/card-file/${cardId}/image`
+  const pdfUrl = `${baseUrl}/api/card-file/${cardId}/pdf`
 
   return { imageUrl, pdfUrl }
 }
+
 
 // ---------- STORACHA CLIENT HELPERS ----------
 
