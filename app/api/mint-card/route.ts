@@ -54,31 +54,31 @@ function buildTextSvg(params: {
   <style>
     .name {
       font-family: "Arial", sans-serif;
-      font-size: 38px;
+      font-size: 70px;
       font-weight: 700;
       fill: #111827;
     }
     .role {
       font-family: "Arial", sans-serif;
-      font-size: 26px;
+      font-size: 42px;
       fill: #1f2937;
     }
     .small {
       font-family: "Arial", sans-serif;
-      font-size: 20px;
+      font-size: 30px;
       fill: #4b5563;
     }
   </style>
 
-  <text x="140" y="1030" class="name">${fullName}</text>
+  <text x="100" y="1050" class="name">${fullName}</text>
   ${displayAlias
-      ? `<text x="140" y="1075" class="role">"${displayAlias}"</text>`
+      ? `<text x="100" y="1100" class="role">"${displayAlias}"</text>`
       : ''
     }
-  <text x="140" y="${displayAlias ? 1120 : 1080}" class="role">${role}</text>
+  <text x="100" y="${displayAlias ? 1140 : 1100}" class="role">${role}</text>
 
-  <text x="140" y="${displayAlias ? 1170 : 1130}" class="small">ID: ${cardId}</text>
-  <text x="140" y="${displayAlias ? 1210 : 1170}" class="small">EXPIRES: ${expirationDate}</text>
+  <text x="100" y="${displayAlias ? 1190 : 1150}" class="small">ID: ${cardId}</text>
+  <text x="100" y="${displayAlias ? 1230 : 1190}" class="small">EXPIRES: ${expirationDate}</text>
 </svg>
 `.trim()
 }

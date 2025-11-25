@@ -5,6 +5,100 @@ import { useAccount } from 'wagmi'
 import { WalletButton } from '@/components/WalletButton'
 import { PhotoUploader } from '@/components/PhotoUploader'
 
+type CardPreviewProps = {
+  firstName: string
+  lastName: string
+  alias: string
+  role: string
+  photoPreview: string | null
+}
+
+function CardPreview({
+  firstName,
+  lastName,
+  alias,
+  role,
+  photoPreview,
+}: CardPreviewProps) {
+  const fullName =
+    (firstName || lastName)
+      ? `${firstName || ''} ${lastName || ''}`.trim()
+      : 'FIRST LAST'
+
+  const aliasDisplay = alias?.trim()
+  const previewCardId = 'KAP-XXXXXXX'
+
+  const now = new Date()
+  const expiration = new Date(
+    now.getFullYear() + 1,
+    now.getMonth(),
+    now.getDate(),
+  )
+  const expirationLabel = expiration.toISOString().slice(0, 10)
+
+  return (
+    <div className="mt-6">
+      <h2 className="text-sm font-semibold text-slate-200 mb-2">
+        Card preview
+      </h2>
+
+      <div className="relative w-full max-w-sm mx-auto aspect-[1064/1300] rounded-xl overflow-hidden shadow-lg border border-slate-700 bg-slate-900">
+        {/* Background */}
+        <div className="absolute inset-0 bg-[url('/kaprika-card-bg.png')] bg-cover bg-center opacity-90" />
+
+        {/* Photo zone */}
+        <div className="absolute left-[23%] top-[14%] w-[54%] aspect-square rounded-md overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center text-xs text-slate-400">
+          {photoPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoPreview}
+              alt="Photo preview"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <span>Photo preview</span>
+          )}
+        </div>
+
+        {/* Text zone */}
+        <div className="absolute left-[10%] right-[10%] bottom-[6%] space-y-1 text-slate-900">
+          <div className="text-lg font-bold leading-tight">
+            {fullName}
+          </div>
+
+          {aliasDisplay && (
+            <div className="text-sm italic text-slate-700">
+              &quot;{aliasDisplay}&quot;
+            </div>
+          )}
+
+          <div className="text-sm font-medium mt-1">
+            {role || 'Role'}
+          </div>
+
+          <div className="text-xs text-slate-700 mt-1">
+            ID: {previewCardId}
+          </div>
+          <div className="text-xs text-slate-700">
+            EXPIRES: {expirationLabel}
+          </div>
+        </div>
+
+        {/* QR placeholder */}
+        <div className="absolute right-[8%] bottom-[10%] w-[18%] aspect-square border-2 border-slate-700 rounded-md flex items-center justify-center text-[0.55rem] text-slate-500 bg-slate-900/60">
+          QR
+        </div>
+      </div>
+
+      <p className="mt-2 text-xs text-slate-400 text-center">
+        Preview only. The final card uses the same template and data, but minor layout
+        differences are possible.
+      </p>
+    </div>
+  )
+}
+
+
 const ADMIN_WALLETS =
   (process.env.NEXT_PUBLIC_ADMIN_WALLETS ?? '')
     .split(',')
@@ -185,16 +279,7 @@ export default function HomePage() {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm mb-1">
-                  Alias / Press name (optional)
-                </label>
-                <input
-                  className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700"
-                  value={alias}
-                  onChange={(e) => setAlias(e.target.value)}
-                />
-              </div>
+
               <div>
                 <label className="block text-sm mb-1">Role</label>
                 <select
@@ -291,6 +376,13 @@ export default function HomePage() {
               deliver your physical Kaprika Press ID card.
             </p>
           </fieldset>
+          <CardPreview
+            firstName={firstName}
+            lastName={lastName}
+            alias={alias}
+            role={role}
+            photoPreview={photoPreview}
+          />
 
           {/* Submit + status */}
           <button
@@ -344,8 +436,21 @@ export default function HomePage() {
                   <span className="font-mono break-all">
                     {mintResult.txHash}
                   </span>
+                  <span className="ml-2">
+                    (
+                    <a
+                      href={`https://amoy.polygonscan.com/tx/${mintResult.txHash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-emerald-400 underline"
+                    >
+                      Check on Polygonscan
+                    </a>
+                    )
+                  </span>
                 </p>
               )}
+
 
               {mintResult.tokenURI && (
                 <p className="text-sm text-slate-200 mb-1">
