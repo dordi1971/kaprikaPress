@@ -7,8 +7,7 @@ import { PhotoUploader } from '@/components/PhotoUploader'
 import { PhoneField, validatePhoneRequired } from '@/components/PhoneField'
 
 // ---------- ON-CHAIN CONFIG ----------
-export const KAPRIKA_PRESS_ID_ADDRESS =
-  process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS as `0x${string}`
+const KAPRIKA_PRESS_ID_ADDRESS = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS as `0x${string}`
 
 // TODO: put your real addresses here
 const USDC_ADDRESS =
