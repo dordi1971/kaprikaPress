@@ -68,11 +68,9 @@ export function PhoneField({
     helperText = 'Number will be saved in international format (e.g. +995555123456).',
 }: PhoneFieldProps) {
     const [defaultCountry, setDefaultCountry] = useState<Country | undefined>('GE')
-    const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
-        setMounted(true)
-        const guessed = guessCountry() // Move guessCountry inside effect to prompt re-render if needed? No, separate logic fine.
+        const guessed = guessCountry()
         if (guessed) setDefaultCountry(guessed)
     }, [])
 
@@ -98,26 +96,19 @@ export function PhoneField({
                 {label}
             </label>
 
-            {mounted ? (
-                <PhoneInput
-                    id={inputId}
-                    international
-                    defaultCountry={defaultCountry}
-                    value={value || undefined}
-                    onChange={handlePhoneInputChange}
-                    countryCallingCodeEditable={false}
-                    className="phone-input w-full"
-                    name={name}
-                    autoComplete="tel"
-                    placeholder="+995 555 12 34 56"
-                />
-            ) : (
-                <input
-                    className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700 text-slate-100 placeholder:text-slate-500"
-                    placeholder="+995 555 12 34 56"
-                    disabled
-                />
-            )}
+            <PhoneInput
+                id={inputId}
+                international
+                defaultCountry={defaultCountry}
+                value={value || undefined}
+                onChange={handlePhoneInputChange}
+                countryCallingCodeEditable={false}
+                className="phone-input w-full"
+                // These go to the underlying <input/>
+                name={name}
+                autoComplete="tel"
+                placeholder="+995 555 12 34 56"
+            />
 
             {/* Hidden native input just for browser autofill / password managers */}
             <input

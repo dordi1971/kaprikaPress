@@ -54,14 +54,7 @@ type CardRecord = {
 }
 
 export default function AdminPage() {
-    const { address, isConnected: isConnectedRaw, status } = useAccount()
-    const [mounted, setMounted] = useState(false)
-
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    const isConnected = mounted && isConnectedRaw
+    const { address, isConnected, status } = useAccount()
     const isAdmin =
         status === 'connected' &&
         !!address &&

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { WalletButton } from '@/components/WalletButton'
 import { PhotoUploader } from '@/components/PhotoUploader'
@@ -57,18 +57,13 @@ function CardPreview({
 
   const previewCardId = 'KAP-XXXXXXX' // preview only
 
-  // --- hydration fix: calculate date only on client ---
-  const [expirationLabel, setExpirationLabel] = useState<string>('')
-
-  useEffect(() => {
-    const now = new Date()
-    const expiration = new Date(
-      now.getFullYear() + 1,
-      now.getMonth(),
-      now.getDate(),
-    )
-    setExpirationLabel(expiration.toISOString().slice(0, 10))
-  }, [])
+  const now = new Date()
+  const expiration = new Date(
+    now.getFullYear() + 1,
+    now.getMonth(),
+    now.getDate(),
+  )
+  const expirationLabel = expiration.toISOString().slice(0, 10)
 
   // --- dynamic font size based on longest line ---
   const maxLineLength = Math.max(displayFirst.length, displayLast.length)
@@ -122,7 +117,7 @@ function CardPreview({
             <div className="text-xs font-medium mt-1">{role || 'Role'}</div>
 
             <div className="text-[10px] text-slate-700">
-              EXPIRES: {expirationLabel || 'YYYY-MM-DD'}
+              EXPIRES: {expirationLabel}
             </div>
           </div>
         </div>
@@ -154,16 +149,7 @@ const ADMIN_WALLETS =
     .filter(Boolean)
 
 export default function HomePage() {
-  const { address, isConnected: isConnectedRaw } = useAccount()
-  const [mounted, setMounted] = useState(false)
-
-  // Prevent hydration errors by waiting for mount
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const isConnected = mounted && isConnectedRaw
-
+  const { address, isConnected } = useAccount()
   const { writeContractAsync } = useWriteContract()
 
   // Is this wallet an admin?

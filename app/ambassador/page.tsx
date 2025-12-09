@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useAccount, useReadContract, useWriteContract } from 'wagmi'
 import {
     kaprikaPressIdAbi,
@@ -11,16 +11,7 @@ import { WalletButton } from '@/components/WalletButton'
 const USDC_DECIMALS = 6
 
 export default function AmbassadorOfficePage() {
-    const { address, isConnected: isConnectedRaw } = useAccount()
-    const [mounted, setMounted] = useState(false)
-
-    // Prevent hydration errors
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
-    const isConnected = mounted && isConnectedRaw
-
+    const { address, isConnected } = useAccount()
     const { writeContractAsync } = useWriteContract()
 
     const [txHash, setTxHash] = useState<`0x${string}` | null>(null)
