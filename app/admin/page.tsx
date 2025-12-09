@@ -7,20 +7,11 @@ import { Client, type Identifier, type Signer as XmtpSigner } from '@xmtp/browse
 import { ethers } from 'ethers'
 
 
-import dynamic from 'next/dynamic'
-
-const WalletButton = dynamic(
-    () => import('@/components/WalletButton').then((mod) => mod.WalletButton),
-    { ssr: false }
-)
-const PhoneField = dynamic(
-    () => import('@/components/PhoneField').then((mod) => mod.PhoneField),
-    { ssr: false }
-)
+import { WalletButton } from '@/components/WalletButton'
 
 import { useAccount } from 'wagmi'
 import { PhotoUploader } from '@/components/PhotoUploader'
-import { validatePhoneOptional } from '@/components/PhoneField'
+import { PhoneField, validatePhoneOptional } from '@/components/PhoneField'
 
 
 

@@ -2,12 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from 'react'
 import { useAccount, useWriteContract, useReadContract } from 'wagmi'
-import dynamic from 'next/dynamic'
-
-const WalletButton = dynamic(
-  () => import('@/components/WalletButton').then((mod) => mod.WalletButton),
-  { ssr: false }
-)
+import { WalletButton } from '@/components/WalletButton'
 import { PhotoUploader } from '@/components/PhotoUploader'
 import { PhoneField, validatePhoneRequired } from '@/components/PhoneField'
 
