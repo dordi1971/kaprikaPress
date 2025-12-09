@@ -5,11 +5,11 @@ import { privateKeyToAccount } from 'viem/accounts'
 
 const privateKey = process.env.ADMIN_PRIVATE_KEY
 const rpcUrl = process.env.RPC_URL
-const contractAddress = process.env.KAPRIKA_PRESS_ID_ADDRESS
+const contractAddress = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS
 
 if (!privateKey) throw new Error('ADMIN_PRIVATE_KEY is not set')
 if (!rpcUrl) throw new Error('RPC_URL is not set')
-if (!contractAddress) throw new Error('KAPRIKA_PRESS_ID_ADDRESS is not set')
+if (!contractAddress) throw new Error('NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS is not set')
 
 // Admin account (owner of the KaprikaPressID contract)
 const account = privateKeyToAccount(`0x${privateKey}`)
