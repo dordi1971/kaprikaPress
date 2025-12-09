@@ -18,6 +18,7 @@ export function Providers({
     <WagmiProvider
       config={wagmiAdapter.wagmiConfig}
       initialState={initialState}
+      reconnectOnMount={false}
     >
       <QueryClientProvider client={queryClient}>
         {children}
