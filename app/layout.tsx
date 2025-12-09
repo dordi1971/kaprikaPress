@@ -16,11 +16,8 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const headersList = await headers()
-  const initialState = cookieToInitialState(
-    wagmiAdapter.wagmiConfig,
-    headersList.get('cookie')
-  )
+  // Client-side storage (localStorage) doesn't use server hydration
+  const initialState = undefined
 
   return (
     <html lang="en">
