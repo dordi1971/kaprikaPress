@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FormEvent } from 'react'
+import { useState, useEffect, type FormEvent } from 'react'
 import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { WalletButton } from '@/components/WalletButton'
 import { PhotoUploader } from '@/components/PhotoUploader'
@@ -149,7 +149,16 @@ const ADMIN_WALLETS =
     .filter(Boolean)
 
 export default function HomePage() {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected: isConnectedRaw } = useAccount()
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration errors by waiting for mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  const isConnected = mounted && isConnectedRaw
+
   const { writeContractAsync } = useWriteContract()
 
   // Is this wallet an admin?
