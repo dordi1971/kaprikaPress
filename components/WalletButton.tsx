@@ -2,7 +2,7 @@
 'use client'
 
 import { useAppKit } from '@reown/appkit/react'
-import { useAccount, useDisconnect } from 'wagmi'
+import { useAccount, useDisconnect, useConnect } from 'wagmi'
 import { useEffect, useState } from 'react'
 
 function shortenAddress(address: string) {
@@ -13,6 +13,8 @@ export function WalletButton() {
   const { address, isConnected } = useAccount()
   const { disconnect } = useDisconnect()
   const { open } = useAppKit()
+  // Debugging: Check for connection errors
+  const { error } = useConnect()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -49,6 +51,7 @@ export function WalletButton() {
       className="px-4 py-2 rounded-md border border-emerald-500/50 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-100 text-sm transition-colors"
     >
       Connect Wallet
+      {error && <div className="text-red-500 text-xs mt-1">{error.message}</div>}
     </button>
   )
 }

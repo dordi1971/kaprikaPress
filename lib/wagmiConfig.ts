@@ -16,7 +16,9 @@ if (!projectId) {
 export const networks = [polygonAmoy]
 
 export const wagmiAdapter = new WagmiAdapter({
-  // storage: createStorage({ storage: cookieStorage }), // SSR disabled for IP compatibility
+  storage: createStorage({
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined
+  }),
   ssr: false,
   projectId,
   networks
