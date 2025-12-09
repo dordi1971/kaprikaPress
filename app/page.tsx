@@ -2,9 +2,19 @@
 
 import { useState, useEffect, type FormEvent } from 'react'
 import { useAccount, useWriteContract, useReadContract } from 'wagmi'
-import { WalletButton } from '@/components/WalletButton'
+import dynamic from 'next/dynamic'
+
+const WalletButton = dynamic(
+  () => import('@/components/WalletButton').then((mod) => mod.WalletButton),
+  { ssr: false }
+)
+const PhoneField = dynamic(
+  () => import('@/components/PhoneField').then((mod) => mod.PhoneField),
+  { ssr: false }
+)
+
 import { PhotoUploader } from '@/components/PhotoUploader'
-import { PhoneField, validatePhoneRequired } from '@/components/PhoneField'
+import { validatePhoneRequired } from '@/components/PhoneField'
 
 // ---------- ON-CHAIN CONFIG ----------
 const KAPRIKA_PRESS_ID_ADDRESS = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS as `0x${string}`

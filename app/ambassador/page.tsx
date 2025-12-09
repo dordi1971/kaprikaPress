@@ -6,7 +6,12 @@ import {
     kaprikaPressIdAbi,
     KAPRIKA_PRESS_ID_ADDRESS,
 } from '@/lib/kaprikaAbi'
-import { WalletButton } from '@/components/WalletButton'
+import dynamic from 'next/dynamic'
+
+const WalletButton = dynamic(
+    () => import('@/components/WalletButton').then((mod) => mod.WalletButton),
+    { ssr: false }
+)
 
 const USDC_DECIMALS = 6
 
