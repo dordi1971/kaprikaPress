@@ -10,8 +10,7 @@ import { PhoneField, validatePhoneRequired } from '@/components/PhoneField'
 const KAPRIKA_PRESS_ID_ADDRESS = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS as `0x${string}`
 
 // TODO: put your real addresses here
-const USDC_ADDRESS =
-  '0x5A22c444650805a1044EDEC3d59f3bA4163DAB33' as `0x${string}`
+const USDC_ADDRESS = '0x5A22c444650805a1044EDEC3d59f3bA4163DAB33' as `0x${string}`
 
 
 // Minimal ERC20 ABI (approve only)

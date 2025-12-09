@@ -15,11 +15,7 @@ import { PhoneField, validatePhoneOptional } from '@/components/PhoneField'
 
 
 
-declare global {
-    interface Window {
-        ethereum?: any
-    }
-}
+
 
 
 
@@ -381,14 +377,6 @@ export default function AdminPage() {
             console.log('[XMTP] handleSendMessage done')
         }
     }
-
-
-
-
-
-
-
-
 
     const handleCreateSubmit = async (e: FormEvent) => {
         e.preventDefault()

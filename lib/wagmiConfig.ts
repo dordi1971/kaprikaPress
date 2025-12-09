@@ -1,42 +1,46 @@
 // lib/wagmiConfig.ts
 
-import { http, createConfig } from 'wagmi'
-import { polygonAmoy } from 'wagmi/chains'
-import { injected, walletConnect, metaMask } from 'wagmi/connectors'
+import { cookieStorage, createStorage, http } from '@wagmi/core'
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
+import { polygonAmoy } from '@reown/appkit/networks'
+import { createAppKit } from '@reown/appkit/react'
 
-
-const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID
-const myurl = process.env.NEXT_PUBLIC_APP_BASE_URL
+// 1. Get projectId from https://cloud.reown.com
+export const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID
 
 if (!projectId) {
-  throw new Error(
-    'NEXT_PUBLIC_REOWN_PROJECT_ID is not set. Please add it to your .env.local'
-  )
+  throw new Error('Project ID is not defined')
 }
 
-export const wagmiConfig = createConfig({
-  chains: [polygonAmoy],
-  connectors: [
-    // 0) MetaMask SDK – handles extension & mobile app
-    metaMask({
-      dappMetadata: {
-        name: 'Kaprika Press ID',
-        // url is optional; defaults to window.location.origin on the client
-      },
-    }),
+export const networks = [polygonAmoy]
 
-    // 1) Generic injected wallets (Browser Wallet)
-    injected(),
-
-    // 2) WalletConnect / Reown – for non-MetaMask mobile wallets, QR on desktop
-    walletConnect({
-      projectId,
-      showQrModal: true,
-    }),
-  ],
-
-  transports: {
-    [polygonAmoy.id]: http(), // change to custom RPC if/when you want
-  },
+// 2. Set up Wagmi Adapter
+export const wagmiAdapter = new WagmiAdapter({
+  storage: createStorage({
+    storage: cookieStorage
+  }),
   ssr: true,
+  projectId,
+  networks
+})
+
+// 3. Configure the adapter
+export const config = wagmiAdapter.wagmiConfig
+
+// 4. Create the modal
+export const metadata = {
+  name: 'Kaprika Press ID',
+  description: 'Mint your Kaprika Press ID',
+  url: 'https://kaprika.press', // origin must match your domain & subdomain
+  icons: ['https://avatars.githubusercontent.com/u/179229932']
+}
+
+createAppKit({
+  adapters: [wagmiAdapter],
+  networks: [polygonAmoy],
+  projectId,
+  metadata,
+  features: {
+    analytics: true // Optional - defaults to your Cloud configuration
+  }
 })
