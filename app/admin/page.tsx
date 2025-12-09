@@ -11,7 +11,7 @@ import { WalletButton } from '@/components/WalletButton'
 
 import { useAccount } from 'wagmi'
 import { PhotoUploader } from '@/components/PhotoUploader'
-
+import { PhoneField, validatePhoneOptional } from '@/components/PhoneField'
 
 
 
@@ -85,6 +85,7 @@ export default function AdminPage() {
     const [createRole, setCreateRole] = useState('Journalist')
     const [createEmail, setCreateEmail] = useState('')
     const [createPhone, setCreatePhone] = useState('')
+    const [createPhoneError, setCreatePhoneError] = useState<string | null>(null)
     const [createDelivery, setCreateDelivery] = useState('')
     const [createPhoto, setCreatePhoto] = useState<File | null>(null)
     const [createPhotoPreview, setCreatePhotoPreview] = useState<string | null>(null)
@@ -398,7 +399,11 @@ export default function AdminPage() {
 
         setSavingId('_create_')
         setError(null)
-
+        const phoneError = validatePhoneOptional(createPhone)
+        if (phoneError) {
+            setCreatePhoneError(phoneError)
+            return
+        }
         try {
             const fd = new FormData()
             fd.append('firstName', createFirstName.trim())
@@ -406,7 +411,10 @@ export default function AdminPage() {
             fd.append('alias', createAlias.trim())
             fd.append('role', createRole.trim())
             fd.append('email', createEmail.trim())
-            fd.append('phone', createPhone.trim())
+            if (createPhone) {
+                // Already E.164 "+995555123456", safe to store / print as-is
+                fd.append('phone', createPhone)
+            }
             fd.append('deliveryAddress', createDelivery.trim())
             fd.append('photo', createPhoto)
 
@@ -706,12 +714,18 @@ export default function AdminPage() {
                                 value={createEmail}
                                 onChange={(e) => setCreateEmail(e.target.value)}
                             />
-                            <input
-                                className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
-                                placeholder="Phone (optional)"
+                            <PhoneField
+                                label="Phone (optional)"
                                 value={createPhone}
-                                onChange={(e) => setCreatePhone(e.target.value)}
+                                onChange={(val) => {
+                                    setCreatePhone(val)
+                                    if (createPhoneError) setCreatePhoneError(null)
+                                }}
+                                required={false}
+                                name="adminPhone"
+                                error={createPhoneError}
                             />
+
                             <textarea
                                 className="w-full rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs"
                                 placeholder="Delivery address (optional)"

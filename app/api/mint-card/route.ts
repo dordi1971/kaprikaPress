@@ -3,14 +3,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 import fs from 'fs/promises'
 import sharp from 'sharp'
-import { PDFDocument } from 'pdf-lib'
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import QRCode from 'qrcode'
 import { Blob } from 'buffer'
 import * as Client from '@storacha/client'
 import { StoreMemory } from '@storacha/client/stores/memory'
 import * as Proof from '@storacha/client/proof'
 import { Signer } from '@storacha/client/principal/ed25519'
-import { kaprikaContract } from '@/lib/kaprikaContract'
+
+import { computeDisplayName } from '@/lib/nameLayout'
+import { generateNumericCardId } from '@/lib/cardId'
 
 export const runtime = 'nodejs'
 
@@ -28,23 +30,30 @@ const COA_WIDTH = 150
 const COA_HEIGHT = 150
 const COA_LEFT = 70
 const COA_TOP = 70
-
+const nameX = 100
+const firstLineBaselineY = 1030
 // QR code placement (bottom-right)
-const QR_SIZE = 180
-const QR_LEFT = CARD_WIDTH - QR_SIZE - 80
-const QR_TOP = 1000
+const QR_SIZE = 220
+const QR_LEFT = CARD_WIDTH - QR_SIZE - 60
+const QR_TOP = 980
+
+
 
 // ---------- TEXT SVG (ZONE 2) ----------
 
 function buildTextSvg(params: {
-  fullName: string
+  displayFirst: string
+  displayLast: string
+  nameAllCaps: boolean
   alias?: string | null
   role: string
   cardId: string
   issueDate: string
   expirationDate: string
+  fontSize: number
 }) {
-  const { fullName, alias, role, cardId, /* issueDate */ expirationDate } =
+  const lineGap = params.fontSize * 1.05
+  const { displayFirst, displayLast, alias, role, cardId, /* issueDate */ expirationDate } =
     params
 
   const displayAlias = alias && alias.trim().length > 0 ? alias.trim() : ''
@@ -54,43 +63,182 @@ function buildTextSvg(params: {
   <style>
     .name {
       font-family: "Arial", sans-serif;
-      font-size: 70px;
+      font-size: ${params.fontSize}px;
+      text-transform: uppercase; 
       font-weight: 700;
       fill: #111827;
     }
     .role {
       font-family: "Arial", sans-serif;
-      font-size: 42px;
+      font-size: ${params.fontSize * 0.6}px;
       fill: #1f2937;
     }
     .small {
       font-family: "Arial", sans-serif;
-      font-size: 30px;
+      font-size: ${params.fontSize * 0.4}px;
       fill: #4b5563;
     }
   </style>
+  <text x="${nameX}" y="${firstLineBaselineY}" class="name">${displayFirst}</text>
+  <text x="${nameX}" y="${firstLineBaselineY + lineGap}" class="name">${displayLast}</text>
 
-  <text x="100" y="1050" class="name">${fullName}</text>
-  ${displayAlias
-      ? `<text x="100" y="1100" class="role">"${displayAlias}"</text>`
-      : ''
-    }
-  <text x="100" y="${displayAlias ? 1140 : 1100}" class="role">${role}</text>
+  <text x="${nameX}" y="${firstLineBaselineY + lineGap * 1.7}" class="role">${role}</text>
 
-  <text x="100" y="${displayAlias ? 1190 : 1150}" class="small">ID: ${cardId}</text>
-  <text x="100" y="${displayAlias ? 1230 : 1190}" class="small">EXPIRES: ${expirationDate}</text>
+  <text x="${QR_LEFT}" y="${QR_TOP + QR_SIZE + 40}" class="small">ID: ${cardId}</text>
+  <text x="${nameX}" y="${QR_TOP + QR_SIZE + 40}" class="small">EXPIRES: ${expirationDate}</text>
 </svg>
 `.trim()
 }
 
-// ---------- PDF FROM PNG ----------
+// Helper to flip coordinates from top-left (SVG/Canvas) to bottom-left (PDF)
+function toPdfY(yFromTop: number, height: number = 0) {
+  return CARD_HEIGHT - (yFromTop + height)
+}
 
-async function createPdfFromPng(pngBuffer: Uint8Array): Promise<Buffer> {
+async function createVectorPdf(params: {
+  displayFirst: string
+  displayLast: string
+  nameAllCaps: boolean
+  role: string
+  cardId: string
+  expirationDate: string
+  fontSize: number
+  photoBuffer: Buffer
+  qrBuffer: Buffer
+  coaBuffer: Buffer | null
+}): Promise<Buffer> {
+  const lineGap = params.fontSize * 1.05
+  const {
+    displayFirst,
+    displayLast,
+    role,
+    cardId,
+    expirationDate,
+    fontSize,
+    photoBuffer,
+    qrBuffer,
+    coaBuffer,
+  } = params
+
   const pdfDoc = await PDFDocument.create()
-  const pngImage = await pdfDoc.embedPng(pngBuffer)
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
 
+  // -- PAGE 1: FRONT --
   const page = pdfDoc.addPage([CARD_WIDTH, CARD_HEIGHT])
-  page.drawImage(pngImage, {
+
+  // 1. Background
+  const frontBgBytes = await fs.readFile(
+    path.join(process.cwd(), 'public', 'kaprika-card-bg.png'),
+  )
+  const frontBgImage = await pdfDoc.embedPng(frontBgBytes)
+  page.drawImage(frontBgImage, {
+    x: 0,
+    y: 0,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+  })
+
+  // 2. User Photo
+  // Embed PNG (since sharp converted it to PNG)
+  const photoImage = await pdfDoc.embedPng(photoBuffer)
+  // PDF y is bottom-left of image
+  page.drawImage(photoImage, {
+    x: PHOTO_LEFT,
+    y: toPdfY(PHOTO_TOP, PHOTO_HEIGHT),
+    width: PHOTO_WIDTH,
+    height: PHOTO_HEIGHT,
+  })
+
+  // 3. COA (if exists)
+  if (coaBuffer) {
+    const coaImage = await pdfDoc.embedPng(coaBuffer)
+    page.drawImage(coaImage, {
+      x: COA_LEFT,
+      y: toPdfY(COA_TOP, COA_HEIGHT),
+      width: COA_WIDTH,
+      height: COA_HEIGHT,
+    })
+  }
+
+  // 4. QR Code
+  const qrImage = await pdfDoc.embedPng(qrBuffer)
+  page.drawImage(qrImage, {
+    x: QR_LEFT,
+    y: toPdfY(QR_TOP, QR_SIZE),
+    width: QR_SIZE,
+    height: QR_SIZE,
+  })
+
+  // 5. Text (Vectorized)
+  // Text Y in drawing commands is the baseline.
+  // In our SVG logic, y values where baselines from top.
+  // So converting them: y_pdf = HEIGHT - y_svg_baseline.
+
+  // Name Line 1
+  page.drawText(displayFirst, {
+    x: nameX,
+    y: toPdfY(firstLineBaselineY),
+    size: fontSize,
+    font: fontBold,
+    color: rgb(0.067, 0.094, 0.153), // #111827
+  })
+
+  // Name Line 2
+  page.drawText(displayLast, {
+    x: nameX,
+    y: toPdfY(firstLineBaselineY + lineGap),
+    size: fontSize,
+    font: fontBold,
+    color: rgb(0.067, 0.094, 0.153), // #111827
+  })
+
+  // Role
+  page.drawText(role, {
+    x: nameX,
+    y: toPdfY(firstLineBaselineY + lineGap * 1.7),
+    size: fontSize * 0.6,
+    font: fontRegular,
+    color: rgb(0.122, 0.161, 0.216), // #1f2937
+  })
+
+  // Small Text (ID, Expiry)
+  // SVG Logic:
+  // ID: y = QR_TOP + QR_SIZE + 40
+  // Expiry: y = QR_TOP + QR_SIZE + 40 (wait, both same Y in original SVG function? Let's check...)
+  // Original SVG function:
+  // <text x="${QR_LEFT}" y="${QR_TOP + QR_SIZE + 40}" class="small">ID: ${cardId}</text>
+  // <text x="${nameX}" y="${QR_TOP + QR_SIZE + 40}" class="small">EXPIRES: ${expirationDate}</text>
+  // Yes, they are on the same line.
+
+  const footerY = QR_TOP + QR_SIZE + 40
+  const smallSize = fontSize * 0.4
+  const smallColor = rgb(0.294, 0.333, 0.388) // #4b5563
+
+  page.drawText(`ID: ${cardId}`, {
+    x: QR_LEFT,
+    y: toPdfY(footerY),
+    size: smallSize,
+    font: fontRegular,
+    color: smallColor,
+  })
+
+  page.drawText(`EXPIRES: ${expirationDate}`, {
+    x: nameX,
+    y: toPdfY(footerY),
+    size: smallSize,
+    font: fontRegular,
+    color: smallColor,
+  })
+
+
+  // -- PAGE 2: BACK --
+  const backBgBytes = await fs.readFile(
+    path.join(process.cwd(), 'public', 'kaprika-card-back.png'),
+  )
+  const backBgImage = await pdfDoc.embedPng(backBgBytes)
+  const backPage = pdfDoc.addPage([CARD_WIDTH, CARD_HEIGHT])
+  backPage.drawImage(backBgImage, {
     x: 0,
     y: 0,
     width: CARD_WIDTH,
@@ -196,6 +344,7 @@ export async function POST(req: NextRequest) {
     const wallet = formData.get('wallet') as string | null
     const firstName = formData.get('firstName') as string | null
     const lastName = formData.get('lastName') as string | null
+    const nameAllCaps = formData.get('nameAllCaps') === '1'
     const alias = formData.get('alias') as string | null
     const role = (formData.get('role') as string | null) || 'PRESS'
     const country = formData.get('country') as string | null
@@ -206,6 +355,8 @@ export async function POST(req: NextRequest) {
     const deliveryAddress = formData.get('deliveryAddress') as string | null
 
     const photoFile = formData.get('photo') as File | null
+
+
 
     if (!wallet || !firstName || !lastName || !photoFile) {
       return NextResponse.json(
@@ -251,16 +402,28 @@ export async function POST(req: NextRequest) {
     const expirationDate = expiration.toISOString().slice(0, 10)
 
     // Card ID
-    const cardId = `KAP-${Date.now().toString(36)}`
+    const cardId = await generateNumericCardId()
 
     // Text overlay (zone 2)
+    const { displayFirst, displayLast, fontSize } = computeDisplayName(
+      firstName,
+      lastName,
+      nameAllCaps,
+    )
+
+
+
+
     const textSvg = buildTextSvg({
-      fullName,
+      displayFirst,
+      displayLast,
+      nameAllCaps,
       alias,
       role,
       cardId,
       issueDate,
       expirationDate,
+      fontSize,
     })
     const textPng = await sharp(Buffer.from(textSvg)).png().toBuffer()
 
@@ -270,6 +433,7 @@ export async function POST(req: NextRequest) {
       width: QR_SIZE,
       margin: 0,
     })
+
 
     // Compose final card PNG
     const overlays: sharp.OverlayOptions[] = [
@@ -296,7 +460,18 @@ export async function POST(req: NextRequest) {
       .toBuffer()
 
     // PDF
-    const pdfBuffer = await createPdfFromPng(cardPngBuffer)
+    const pdfBuffer = await createVectorPdf({
+      displayFirst,
+      displayLast,
+      nameAllCaps,
+      role,
+      cardId,
+      expirationDate,
+      fontSize,
+      photoBuffer: resizedPhoto,
+      qrBuffer: qrPngBuffer,
+      coaBuffer: coaBufferOrNull,
+    })
 
     // Local files for printing / manual access
     const { imageUrl, pdfUrl } = await writeLocalOutputs(
@@ -350,16 +525,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Mint NFT with final tokenURI
-    let txHash: `0x${string}` | null = null
-    try {
-      txHash = await kaprikaContract.write.mintId([
-        wallet as `0x${string}`,
-        tokenURI,
-      ])
-    } catch (err) {
-      console.error('Minting transaction failed:', err)
-    }
+    // NOTE: We no longer mint on the server.
+    // The server only prepares assets + tokenURI and returns them.
+    const txHash: `0x${string}` | null = null
 
     return NextResponse.json({
       ok: true,
@@ -382,6 +550,7 @@ export async function POST(req: NextRequest) {
       ipfsMetadataCid: ipfsMetadata?.cid ?? null,
       ipfsMetadataUrl: ipfsMetadata?.gatewayUrl ?? null,
     })
+
   } catch (err: any) {
     console.error('Error in /api/mint-card:', err)
     return NextResponse.json(

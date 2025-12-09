@@ -24,3 +24,44 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Phone input wrapper */
+.phone-input {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgb(51 65 85);
+  /* slate-700 */
+  background-color: rgb(15 23 42);
+  /* slate-900 */
+  font-size: 0.875rem;
+  color: rgb(226 232 240);
+  /* slate-200 */
+}
+
+/* Underlying <input> inside react-phone-number-input */
+.phone-input .PhoneInputInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  color: inherit;
+}
+
+/* Country select button / flag */
+.phone-input .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Country dropdown */
+.phone-input .PhoneInputCountrySelect {
+  background: transparent;
+  border: none;
+  color: #222222;
+}

@@ -1,33 +1,42 @@
 // lib/wagmiConfig.ts
 
 import { http, createConfig } from 'wagmi'
-import { mainnet, optimism, polygonAmoy } from 'wagmi/chains' // Add your specific chains (Kaprika?)
-import { injected, walletConnect } from 'wagmi/connectors'
+import { polygonAmoy } from 'wagmi/chains'
+import { injected, walletConnect, metaMask } from 'wagmi/connectors'
 
-// Replace this with the ID you got in Step 1
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+
+const projectId = process.env.NEXT_PUBLIC_REOWN_PROJECT_ID
+const myurl = process.env.NEXT_PUBLIC_APP_BASE_URL
 
 if (!projectId) {
   throw new Error(
-    'NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID is not set. Please add it to your .env.local'
+    'NEXT_PUBLIC_REOWN_PROJECT_ID is not set. Please add it to your .env.local'
   )
 }
 
 export const wagmiConfig = createConfig({
   chains: [polygonAmoy],
   connectors: [
-    // 1) Browser / injected wallets (MetaMask extension, MetaMask in-app browser, etc.)
+    // 0) MetaMask SDK – handles extension & mobile app
+    metaMask({
+      dappMetadata: {
+        name: 'Kaprika Press ID',
+        // url is optional; defaults to window.location.origin on the client
+      },
+    }),
+
+    // 1) Generic injected wallets (Browser Wallet)
     injected(),
 
-    // 2) WalletConnect – for mobile wallets (MetaMask mobile, Rainbow, Trust Wallet, etc.)
+    // 2) WalletConnect / Reown – for non-MetaMask mobile wallets, QR on desktop
     walletConnect({
       projectId,
-      // showQrModal true => QR on desktop, deep-link list on mobile
       showQrModal: true,
     }),
   ],
+
   transports: {
-    [polygonAmoy.id]: http(), // you can still swap this for your own RPC
+    [polygonAmoy.id]: http(), // change to custom RPC if/when you want
   },
   ssr: true,
 })
