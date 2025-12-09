@@ -28,10 +28,12 @@ export const wagmiAdapter = new WagmiAdapter({
 export const config = wagmiAdapter.wagmiConfig
 
 // 4. Create the modal
+const url = typeof window !== 'undefined' ? window.location.origin : 'https://kaprika.press'
+
 export const metadata = {
   name: 'Kaprika Press ID',
   description: 'Mint your Kaprika Press ID',
-  url: 'https://kaprika.press', // origin must match your domain & subdomain
+  url,
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
