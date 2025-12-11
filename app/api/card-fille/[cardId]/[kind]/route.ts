@@ -6,11 +6,22 @@ import fs from 'fs/promises'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-export async function GET(
-    _req: NextRequest,
-    context: { params: Promise<{ cardId: string; kind: string }> },
-) {
-    const { cardId, kind } = await context.params
+export async function GET(req: NextRequest) {
+    // URL looks like: /api/card-file/<cardId>/<kind>
+    // e.g.           /api/card-file/551719785/image
+    const url = new URL(req.url)
+    const segments = url.pathname.split('/').filter(Boolean)
+    // ['api', 'card-file', '{cardId}', '{kind}']
+
+    if (segments.length < 4) {
+        return NextResponse.json(
+            { ok: false, error: 'Invalid URL' },
+            { status: 400 },
+        )
+    }
+
+    const cardId = segments[2]
+    const kind = segments[3]
 
     const ext =
         kind === 'image'
