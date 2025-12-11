@@ -1,11 +1,6 @@
-// app/verify/[cardId]/page.tsx
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-
-type VerifyPageProps = {
-    params: { cardId: string }
-}
 
 type CardData = {
     cardId: string
@@ -39,12 +34,20 @@ async function fetchCard(cardId: string): Promise<CardData | null> {
     return res.json()
 }
 
-export default async function VerifyPage({ params }: VerifyPageProps) {
-    const card = await fetchCard(params.cardId)
+export default async function VerifyPage({
+    params,
+}: {
+    params: Promise<{ cardId: string }>
+}) {
+    const resolved = await params
+    const cardIdFromParams = resolved.cardId
+
+    const card = await fetchCard(cardIdFromParams)
 
     if (!card) {
         notFound()
     }
+
 
     const {
         cardId,
