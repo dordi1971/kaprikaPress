@@ -5,7 +5,6 @@ import { useAccount, useWriteContract, useReadContract } from 'wagmi'
 import { WalletButton } from '@/components/WalletButton'
 import { PhotoUploader } from '@/components/PhotoUploader'
 import { PhoneField, validatePhoneRequired } from '@/components/PhoneField'
-
 // ---------- ON-CHAIN CONFIG ----------
 const KAPRIKA_PRESS_ID_ADDRESS = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS as `0x${string}`
 
