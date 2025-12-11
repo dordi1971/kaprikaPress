@@ -40,12 +40,21 @@ async function loadCardDb(): Promise<CardRecord[]> {
     }
 }
 
-export async function GET(
-    _req: NextRequest,
-    { params }: { params: { cardId: string } },
-) {
+export async function GET(req: NextRequest) {
+    // Extract cardId from the URL path: /api/card/[cardId]
+    const url = new URL(req.url)
+    const segments = url.pathname.split('/').filter(Boolean)
+    const cardId = segments[segments.length - 1]
+
+    if (!cardId) {
+        return NextResponse.json(
+            { error: 'Missing cardId in URL' },
+            { status: 400 },
+        )
+    }
+
     const cards = await loadCardDb()
-    const card = cards.find((c) => c.cardId === params.cardId)
+    const card = cards.find((c) => c.cardId === cardId)
 
     if (!card) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 })
