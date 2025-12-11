@@ -2,7 +2,7 @@
 
 import { cookieStorage, createStorage, http } from '@wagmi/core'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { polygonAmoy } from '@reown/appkit/networks'
+import { polygon } from '@reown/appkit/networks'
 import { createAppKit } from '@reown/appkit/react'
 
 // 1. Get projectId from https://cloud.reown.com
@@ -13,7 +13,7 @@ if (!projectId) {
 }
 
 // 2. Set up Wagmi Adapter
-export const networks = [polygonAmoy]
+export const networks = [polygon]
 
 export const wagmiAdapter = new WagmiAdapter({
   // storage: createStorage({ storage: cookieStorage }), // SSR disabled for IP compatibility
@@ -37,7 +37,7 @@ export const metadata = {
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [polygonAmoy],
+  networks: [polygon],
   projectId,
   metadata,
   features: {
