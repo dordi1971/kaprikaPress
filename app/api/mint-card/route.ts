@@ -31,11 +31,11 @@ const COA_HEIGHT = 150
 const COA_LEFT = 70
 const COA_TOP = 70
 const nameX = 100
-const firstLineBaselineY = 1030
+const firstLineBaselineY = 1010
 // QR code placement (bottom-right)
 const QR_SIZE = 220
 const QR_LEFT = CARD_WIDTH - QR_SIZE - 60
-const QR_TOP = 980
+const QR_TOP = 960
 
 // ---------- SIMPLE CARD "DATABASE" (JSON FILE) ----------
 
@@ -185,8 +185,8 @@ async function createVectorPdf(params: {
 
   // -- PAGE 1: FRONT --
   const page = pdfDoc.addPage([CARD_WIDTH * 1.1, CARD_HEIGHT * 1.1])
-  const xGap = CARD_WIDTH * 0.1
-  const yGap = CARD_HEIGHT * 0.1
+  const xGap = CARD_WIDTH * 0.05
+  const yGap = CARD_HEIGHT * 0.05
   // 1. Background
   const frontBgBytes = await fs.readFile(
     path.join(process.cwd(), 'public', 'kaprika-card-bg-pdf.png'),

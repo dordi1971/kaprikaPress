@@ -125,7 +125,7 @@ export default async function VerifyPage({
                         <h2 className="text-sm font-medium text-slate-200 uppercase tracking-[0.18em]">
                             Card Preview
                         </h2>
-                        <div className="relative w-full aspect-[85.6/54] bg-slate-800/80 rounded-xl overflow-hidden border border-slate-700">
+                        <div className="relative w-full aspect-[9/11] bg-slate-800/80 rounded-xl overflow-hidden border border-slate-700">
                             {displayImageUrl ? (
                                 <Image
                                     src={displayImageUrl}
