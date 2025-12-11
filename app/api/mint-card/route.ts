@@ -184,8 +184,9 @@ async function createVectorPdf(params: {
   const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica)
 
   // -- PAGE 1: FRONT --
-  const page = pdfDoc.addPage([CARD_WIDTH, CARD_HEIGHT])
-
+  const page = pdfDoc.addPage([CARD_WIDTH * 1.1, CARD_HEIGHT * 1.1])
+  const xGap = CARD_WIDTH * 0.1
+  const yGap = CARD_HEIGHT * 0.1
   // 1. Background
   const frontBgBytes = await fs.readFile(
     path.join(process.cwd(), 'public', 'kaprika-card-bg.png'),
@@ -194,8 +195,8 @@ async function createVectorPdf(params: {
   page.drawImage(frontBgImage, {
     x: 0,
     y: 0,
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
+    width: CARD_WIDTH * 1.1,
+    height: CARD_HEIGHT * 1.1,
   })
 
   // 2. User Photo
@@ -203,8 +204,8 @@ async function createVectorPdf(params: {
   const photoImage = await pdfDoc.embedPng(photoBuffer)
   // PDF y is bottom-left of image
   page.drawImage(photoImage, {
-    x: PHOTO_LEFT,
-    y: toPdfY(PHOTO_TOP, PHOTO_HEIGHT),
+    x: PHOTO_LEFT + xGap,
+    y: toPdfY(PHOTO_TOP, PHOTO_HEIGHT) + yGap,
     width: PHOTO_WIDTH,
     height: PHOTO_HEIGHT,
   })
@@ -213,8 +214,8 @@ async function createVectorPdf(params: {
   if (coaBuffer) {
     const coaImage = await pdfDoc.embedPng(coaBuffer)
     page.drawImage(coaImage, {
-      x: COA_LEFT,
-      y: toPdfY(COA_TOP, COA_HEIGHT),
+      x: COA_LEFT + xGap,
+      y: toPdfY(COA_TOP, COA_HEIGHT) + yGap,
       width: COA_WIDTH,
       height: COA_HEIGHT,
     })
@@ -223,8 +224,8 @@ async function createVectorPdf(params: {
   // 4. QR Code
   const qrImage = await pdfDoc.embedPng(qrBuffer)
   page.drawImage(qrImage, {
-    x: QR_LEFT,
-    y: toPdfY(QR_TOP, QR_SIZE),
+    x: QR_LEFT + xGap,
+    y: toPdfY(QR_TOP, QR_SIZE) + yGap,
     width: QR_SIZE,
     height: QR_SIZE,
   })
@@ -236,8 +237,8 @@ async function createVectorPdf(params: {
 
   // Name Line 1
   page.drawText(displayFirst, {
-    x: nameX,
-    y: toPdfY(firstLineBaselineY),
+    x: nameX + xGap,
+    y: toPdfY(firstLineBaselineY) + yGap,
     size: fontSize,
     font: fontBold,
     color: rgb(0.067, 0.094, 0.153), // #111827
@@ -245,8 +246,8 @@ async function createVectorPdf(params: {
 
   // Name Line 2
   page.drawText(displayLast, {
-    x: nameX,
-    y: toPdfY(firstLineBaselineY + lineGap),
+    x: nameX + xGap,
+    y: toPdfY(firstLineBaselineY + lineGap) + yGap,
     size: fontSize,
     font: fontBold,
     color: rgb(0.067, 0.094, 0.153), // #111827
@@ -254,8 +255,8 @@ async function createVectorPdf(params: {
 
   // Role
   page.drawText(role, {
-    x: nameX,
-    y: toPdfY(firstLineBaselineY + lineGap * 1.7),
+    x: nameX + xGap,
+    y: toPdfY(firstLineBaselineY + lineGap * 1.7) + yGap,
     size: fontSize * 0.6,
     font: fontRegular,
     color: rgb(0.122, 0.161, 0.216), // #1f2937
@@ -275,16 +276,16 @@ async function createVectorPdf(params: {
   const smallColor = rgb(0.294, 0.333, 0.388) // #4b5563
 
   page.drawText(`ID: ${cardId}`, {
-    x: QR_LEFT,
-    y: toPdfY(footerY),
+    x: QR_LEFT + xGap,
+    y: toPdfY(footerY) + yGap,
     size: smallSize,
     font: fontRegular,
     color: smallColor,
   })
 
   page.drawText(`EXPIRES: ${expirationDate}`, {
-    x: nameX,
-    y: toPdfY(footerY),
+    x: nameX + xGap,
+    y: toPdfY(footerY) + yGap,
     size: smallSize,
     font: fontRegular,
     color: smallColor,
@@ -296,12 +297,12 @@ async function createVectorPdf(params: {
     path.join(process.cwd(), 'public', 'kaprika-card-back.png'),
   )
   const backBgImage = await pdfDoc.embedPng(backBgBytes)
-  const backPage = pdfDoc.addPage([CARD_WIDTH, CARD_HEIGHT])
+  const backPage = pdfDoc.addPage([CARD_WIDTH * 1.1, CARD_HEIGHT * 1.1])
   backPage.drawImage(backBgImage, {
     x: 0,
     y: 0,
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
+    width: CARD_WIDTH * 1.1,
+    height: CARD_HEIGHT * 1.1,
   })
 
   const pdfBytes = await pdfDoc.save()
