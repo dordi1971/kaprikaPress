@@ -37,6 +37,65 @@ const QR_SIZE = 220
 const QR_LEFT = CARD_WIDTH - QR_SIZE - 60
 const QR_TOP = 980
 
+// ---------- SIMPLE CARD "DATABASE" (JSON FILE) ----------
+
+type CardRecord = {
+  cardId: string
+  wallet: string
+  firstName: string
+  lastName: string
+  alias?: string | null
+  role: string
+  country?: string | null
+  city?: string | null
+  email?: string | null
+  phone?: string | null
+  deliveryAddress?: string | null
+  imageUrl: string
+  pdfUrl: string
+  verificationUrl: string
+  tokenURI: string
+  issueDate: string
+  expirationDate: string
+  txHash?: string | null
+  tokenContract?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+const DATA_DIR = path.join(process.cwd(), 'data')
+const CARD_DB_FILE = path.join(DATA_DIR, 'cards.json')
+
+async function ensureDataDir() {
+  await fs.mkdir(DATA_DIR, { recursive: true })
+}
+
+async function loadCardDb(): Promise<CardRecord[]> {
+  await ensureDataDir()
+  try {
+    const raw = await fs.readFile(CARD_DB_FILE, 'utf8')
+    return JSON.parse(raw) as CardRecord[]
+  } catch (err: any) {
+    if (err?.code === 'ENOENT') return []
+    throw err
+  }
+}
+
+async function saveCardDb(cards: CardRecord[]) {
+  await ensureDataDir()
+  await fs.writeFile(CARD_DB_FILE, JSON.stringify(cards, null, 2), 'utf8')
+}
+
+async function upsertCard(record: CardRecord) {
+  const cards = await loadCardDb()
+  const idx = cards.findIndex((c) => c.cardId === record.cardId)
+  if (idx >= 0) {
+    cards[idx] = record
+  } else {
+    cards.push(record)
+  }
+  await saveCardDb(cards)
+}
 
 
 // ---------- TEXT SVG (ZONE 2) ----------
@@ -528,6 +587,36 @@ export async function POST(req: NextRequest) {
     // NOTE: We no longer mint on the server.
     // The server only prepares assets + tokenURI and returns them.
     const txHash: `0x${string}` | null = null
+    const tokenContract =
+      process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS || null
+
+    const nowIso = new Date().toISOString()
+
+    const cardRecord: CardRecord = {
+      cardId,
+      wallet, // from formData (already validated as non-null)
+      firstName,
+      lastName,
+      alias: alias ?? null,
+      role,
+      country: country ?? null,
+      city: city ?? null,
+      email: email ?? null,
+      phone: phone ?? null,
+      deliveryAddress: deliveryAddress ?? null,
+      imageUrl,
+      pdfUrl,
+      verificationUrl,
+      tokenURI,
+      issueDate,
+      expirationDate,
+      txHash,
+      tokenContract,
+      createdAt: nowIso,
+      updatedAt: nowIso,
+    }
+
+    await upsertCard(cardRecord)
 
     return NextResponse.json({
       ok: true,

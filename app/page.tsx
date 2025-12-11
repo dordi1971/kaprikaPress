@@ -9,9 +9,8 @@ import { PhoneField, validatePhoneRequired } from '@/components/PhoneField'
 // ---------- ON-CHAIN CONFIG ----------
 const KAPRIKA_PRESS_ID_ADDRESS = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS as `0x${string}`
 
-// TODO: put your real addresses here
 const USDC_ADDRESS = '0x5A22c444650805a1044EDEC3d59f3bA4163DAB33' as `0x${string}`
-
+const KUSD_ADDRESS = '0xYourKUSDAddressHere' as `0x${string}`
 
 // Minimal ERC20 ABI (approve only)
 const erc20Abi = [
@@ -24,6 +23,13 @@ const erc20Abi = [
       { name: 'amount', type: 'uint256' },
     ],
     outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'balanceOf',
+    stateMutability: 'view',
+    inputs: [{ name: 'owner', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
   },
 ] as const
 
@@ -171,6 +177,23 @@ export default function HomePage() {
     abi: kaprikaPressIdAbi,
     functionName: 'mintPriceUSDC',
   })
+
+  // kUSD balance for the connected wallet
+  const { data: kusdBalanceRaw } = useReadContract({
+    address: KUSD_ADDRESS,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  })
+
+  const hasEnoughKUSD =
+    isConnected &&
+    address &&
+    typeof mintPriceRaw === 'bigint' &&
+    typeof kusdBalanceRaw === 'bigint' &&
+    kusdBalanceRaw >= mintPriceRaw
+
   // ---------- Form state ----------
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -238,9 +261,9 @@ export default function HomePage() {
   }
 
   // ---------- Submit handler ----------
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
+  type PaymentMode = 'USDC' | 'KUSD'
 
+  const handleMint = async (mode: PaymentMode) => {
     if (!isConnected || !address) {
       setErrorMessage('Wallet not connected.')
       return
@@ -256,21 +279,18 @@ export default function HomePage() {
       setErrorMessage('Please upload a portrait photo.')
       return
     }
+
     // Make sure mint price is configured on-chain
     const mintPrice = mintPriceRaw as bigint | undefined
     if (!mintPrice || mintPrice === 0n) {
       setErrorMessage('Mint price is not configured on the contract. Please contact admin.')
-      setIsSubmitting(false)
       return
     }
 
-    const approveHash = await writeContractAsync({
-      abi: erc20Abi,
-      address: USDC_ADDRESS,
-      functionName: 'approve',
-      args: [KAPRIKA_PRESS_ID_ADDRESS, mintPrice],
-    })
-
+    if (mode === 'KUSD' && !hasEnoughKUSD) {
+      setErrorMessage('You do not have enough kUSD to mint.')
+      return
+    }
 
     // Ambassador mint for another wallet?
     const trimmedRecipient = recipientWallet.trim()
@@ -279,10 +299,9 @@ export default function HomePage() {
     let finalRecipient: string = address
 
     if (isAmbassadorMintForOther) {
-      // Basic address validation
       const re = /^0x[a-fA-F0-9]{40}$/
       if (!re.test(trimmedRecipient)) {
-        setErrorMessage('Recipient wallet address is invalid.')
+        setErrorMessage('Recipient wallet is not a valid address.')
         return
       }
       finalRecipient = trimmedRecipient
@@ -296,13 +315,11 @@ export default function HomePage() {
 
       // 1) Call backend to generate PNG/PDF, upload to Storacha, build tokenURI
       const formData = new FormData()
-      // The wallet that will appear as card owner:
       formData.append('wallet', finalRecipient)
-      // Optionally also send the payer wallet if you want to log who paid:
       formData.append('payerWallet', address)
-
       formData.append('firstName', firstName)
       formData.append('lastName', lastName)
+      formData.append('nameAllCaps', nameAllCaps ? '1' : '0')
       formData.append('alias', alias)
       formData.append('role', role)
       formData.append('country', country)
@@ -325,53 +342,50 @@ export default function HomePage() {
         )
       }
 
-      const data = (await res.json()) as {
-        cardId: string
-        fullName: string
-        tokenURI: string
-        imageUrl?: string
-        pdfUrl?: string
-        verificationUrl?: string
-        ipfsImageUrl?: string | null
-        ipfsPdfUrl?: string | null
-        ipfsMetadataUrl?: string | null
-      }
+      const data = await res.json()
 
-      // 2) Ask MetaMask to approve USDC spend
-      setStatusMessage('Opening MetaMask to approve USDC payment…')
+      // 2) Approve correct payment token
+      const tokenAddress = mode === 'USDC' ? USDC_ADDRESS : KUSD_ADDRESS
+
+      setStatusMessage(
+        mode === 'USDC'
+          ? 'Opening MetaMask to approve USDC payment…'
+          : 'Opening MetaMask to approve kUSD payment…',
+      )
 
       const approveHash = await writeContractAsync({
         abi: erc20Abi,
-        address: USDC_ADDRESS,
+        address: tokenAddress,
         functionName: 'approve',
         args: [KAPRIKA_PRESS_ID_ADDRESS, mintPrice],
       })
 
+      console.log('Approve tx hash:', approveHash)
 
-      console.log('USDC approve tx hash:', approveHash)
+      // 3) Ask MetaMask to mint Kaprika Press ID via chosen token
+      setStatusMessage(
+        mode === 'USDC'
+          ? 'Opening MetaMask to mint your Kaprika Press ID NFT with USDC…'
+          : 'Opening MetaMask to mint your Kaprika Press ID NFT with kUSD…',
+      )
 
-      // 3) Ask MetaMask to mint Kaprika Press ID via USDC
-      setStatusMessage('Opening MetaMask to mint your Kaprika Press ID NFT…')
+      const functionName =
+        mode === 'USDC'
+          ? isAmbassadorMintForOther
+            ? 'mintIdWithUSDCFor'
+            : 'mintIdWithUSDC'
+          : isAmbassadorMintForOther
+            ? 'mintIdWithKUSDFor'
+            : 'mintIdWithKUSD'
 
-      let mintTxHash: `0x${string}`
-
-      if (isAmbassadorMintForOther) {
-        // Ambassador paying for another wallet: use mintIdWithUSDCFor(to, tokenURI)
-        mintTxHash = await writeContractAsync({
-          abi: kaprikaPressIdAbi,
-          address: KAPRIKA_PRESS_ID_ADDRESS,
-          functionName: 'mintIdWithUSDCFor',
-          args: [finalRecipient as `0x${string}`, data.tokenURI],
-        })
-      } else {
-        // Normal flow: mint to msg.sender (no ambassador commission)
-        mintTxHash = await writeContractAsync({
-          abi: kaprikaPressIdAbi,
-          address: KAPRIKA_PRESS_ID_ADDRESS,
-          functionName: 'mintIdWithUSDC',
-          args: [data.tokenURI],
-        })
-      }
+      const mintTxHash = await writeContractAsync({
+        abi: kaprikaPressIdAbi,
+        address: KAPRIKA_PRESS_ID_ADDRESS,
+        functionName,
+        args: isAmbassadorMintForOther
+          ? [finalRecipient as `0x${string}`, data.tokenURI]
+          : [data.tokenURI],
+      })
 
       console.log('Mint tx hash:', mintTxHash)
 
@@ -389,26 +403,19 @@ export default function HomePage() {
         ipfsMetadataUrl: data.ipfsMetadataUrl ?? null,
       })
 
-      setStatusMessage('Your Kaprika Press ID has been minted successfully.')
+      setStatusMessage('Successfully minted your Kaprika Press ID!')
     } catch (err: any) {
       console.error(err)
-
-      let msg = 'Something went wrong while minting your Kaprika Press ID.'
-
-      if (err?.message) {
-        if (err.message.toLowerCase().includes('user rejected')) {
-          msg = 'You rejected the transaction in MetaMask.'
-        } else {
-          msg = err.message
-        }
-      }
-
-      setErrorMessage(msg)
-      setStatusMessage(null)
+      setErrorMessage(
+        err?.shortMessage ||
+        err?.message ||
+        'Mint failed. Please try again or contact support.',
+      )
     } finally {
       setIsSubmitting(false)
     }
   }
+
 
   // ---------- JSX ----------
   return (
@@ -455,9 +462,10 @@ export default function HomePage() {
           {/* LEFT COLUMN: form + submit + messages + mint details */}
           <div className="flex-1 space-y-6">
             <form
-              onSubmit={handleSubmit}
+              onSubmit={(e) => e.preventDefault()}
               className="space-y-6 border border-slate-700 rounded-xl p-6 bg-slate-900/60"
             >
+
               {/* On-card / on-chain info */}
               <fieldset
                 className="space-y-4"
@@ -642,16 +650,36 @@ export default function HomePage() {
 
               {/* Submit + status inside the form */}
               <div className="pt-4 border-t border-slate-700 mt-2 flex flex-col gap-3">
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !isConnected}
-                  className={`px-4 py-2 rounded-md font-medium ${isSubmitting || !isConnected
-                    ? 'bg-slate-500 cursor-not-allowed'
-                    : 'bg-emerald-500 hover:bg-emerald-600'
-                    } text-white transition-colors`}
-                >
-                  {isSubmitting ? 'Minting, please wait…' : 'Mint Kaprika Press ID'}
-                </button>
+                <div className="flex flex-col gap-3">
+                  {/* Primary: always available – mint with USDC */}
+                  <button
+                    type="button"
+                    disabled={isSubmitting || !isConnected}
+                    onClick={() => handleMint('USDC')}
+                    className={`px-4 py-2 rounded-md font-medium ${isSubmitting || !isConnected
+                        ? 'bg-slate-500 cursor-not-allowed'
+                        : 'bg-emerald-500 hover:bg-emerald-600'
+                      } text-white transition-colors`}
+                  >
+                    {isSubmitting ? 'Minting, please wait…' : 'Mint with USDC'}
+                  </button>
+
+                  {/* Secondary: visible only if wallet holds enough kUSD */}
+                  {hasEnoughKUSD && (
+                    <button
+                      type="button"
+                      disabled={isSubmitting || !isConnected}
+                      onClick={() => handleMint('KUSD')}
+                      className={`px-4 py-2 rounded-md font-medium ${isSubmitting || !isConnected
+                          ? 'bg-slate-500 cursor-not-allowed'
+                          : 'bg-indigo-500 hover:bg-indigo-600'
+                        } text-white transition-colors`}
+                    >
+                      {isSubmitting ? 'Minting, please wait…' : 'Mint with kUSD'}
+                    </button>
+                  )}
+                </div>
+
 
                 {statusMessage && (
                   <div className="flex items-start gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-100">

@@ -356,6 +356,19 @@ export const kaprikaPressIdAbi = [
         "inputs": [
             {
                 "indexed": false,
+                "internalType": "address",
+                "name": "kusd",
+                "type": "address"
+            }
+        ],
+        "name": "KUSDAddressUpdated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
                 "internalType": "uint256",
                 "name": "_tokenId",
                 "type": "uint256"
@@ -703,6 +716,19 @@ export const kaprikaPressIdAbi = [
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "kusd",
+        "outputs": [
+            {
+                "internalType": "contract IERC20",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "address",
@@ -716,6 +742,49 @@ export const kaprikaPressIdAbi = [
             }
         ],
         "name": "mintId",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "tokenURI",
+                "type": "string"
+            }
+        ],
+        "name": "mintIdWithKUSD",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "tokenURI",
+                "type": "string"
+            }
+        ],
+        "name": "mintIdWithKUSDFor",
         "outputs": [
             {
                 "internalType": "uint256",
@@ -962,6 +1031,19 @@ export const kaprikaPressIdAbi = [
             }
         ],
         "name": "setApprovalForAll",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_kusd",
+                "type": "address"
+            }
+        ],
+        "name": "setKUSD",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
