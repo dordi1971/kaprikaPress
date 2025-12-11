@@ -795,19 +795,6 @@ export default function HomePage() {
                       <p className="text-sm text-slate-300 mb-2">
                         IPFS (via Storacha):
                       </p>
-                      {mintResult.ipfsMetadataUrl && (
-                        <p className="text-xs text-slate-300 mb-1">
-                          Metadata:{' '}
-                          <a
-                            href={mintResult.ipfsMetadataUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-emerald-400 underline break-all"
-                          >
-                            {mintResult.ipfsMetadataUrl}
-                          </a>
-                        </p>
-                      )}
                       {mintResult.ipfsImageUrl && (
                         <p className="text-xs text-slate-300 mb-1">
                           Image:{' '}
