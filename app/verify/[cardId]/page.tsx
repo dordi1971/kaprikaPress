@@ -1,6 +1,28 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+function normalizeImageUrl(url: string): string {
+    if (!url) return url
+
+    // If it's already relative, just return it
+    if (url.startsWith('/')) return url
+
+    try {
+        const appBase = process.env.NEXT_PUBLIC_APP_BASE_URL
+
+        // If it starts with our APP_BASE_URL, strip the origin
+        if (appBase && url.startsWith(appBase)) {
+            return url.slice(appBase.length) || '/'
+        }
+
+        // Fallback: use only path + search from the URL
+        const u = new URL(url)
+        return u.pathname + u.search
+    } catch {
+        // If anything goes wrong, just return original
+        return url
+    }
+}
 
 type CardData = {
     cardId: string
@@ -68,6 +90,7 @@ export default async function VerifyPage({
     } = card
 
     const fullName = `${firstName} ${lastName}`.trim()
+    const displayImageUrl = normalizeImageUrl(imageUrl)
 
     const scannerBase =
         process.env.NEXT_PUBLIC_POLYGONSCAN_BASE ??
@@ -103,9 +126,9 @@ export default async function VerifyPage({
                             Card Preview
                         </h2>
                         <div className="relative w-full aspect-[85.6/54] bg-slate-800/80 rounded-xl overflow-hidden border border-slate-700">
-                            {imageUrl ? (
+                            {displayImageUrl ? (
                                 <Image
-                                    src={imageUrl}
+                                    src={displayImageUrl}
                                     alt={`Kaprika Press ID card ${cardId}`}
                                     fill
                                     sizes="(min-width: 1024px) 60vw, 100vw"
