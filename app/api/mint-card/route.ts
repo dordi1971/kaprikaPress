@@ -189,7 +189,7 @@ async function createVectorPdf(params: {
   const yGap = CARD_HEIGHT * 0.1
   // 1. Background
   const frontBgBytes = await fs.readFile(
-    path.join(process.cwd(), 'public', 'kaprika-card-bg.png'),
+    path.join(process.cwd(), 'public', 'kaprika-card-bg-pdf.png'),
   )
   const frontBgImage = await pdfDoc.embedPng(frontBgBytes)
   page.drawImage(frontBgImage, {
