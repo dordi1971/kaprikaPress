@@ -8,8 +8,8 @@ import { PhoneField, validatePhoneRequired } from '@/components/PhoneField'
 // ---------- ON-CHAIN CONFIG ----------
 const KAPRIKA_PRESS_ID_ADDRESS = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS as `0x${string}`
 
-const USDC_ADDRESS = '0x5A22c444650805a1044EDEC3d59f3bA4163DAB33' as `0x${string}`
-const KUSD_ADDRESS = '0xa2a515BDB4e05BC894B8764758a219DE46eBbA64' as `0x${string}`
+const USDC_ADDRESS = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359' as `0x${string}`
+const KUSD_ADDRESS = '0x5A22c444650805a1044EDEC3d59f3bA4163DAB33' as `0x${string}`
 
 // Minimal ERC20 ABI (approve only)
 const erc20Abi = [
