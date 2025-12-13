@@ -627,24 +627,40 @@ export default function HomePage() {
                     />
                   </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm mb-1">
-                    Delivery address (for physical card)
-                  </label>
-                  <textarea
-                    className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700"
-                    rows={3}
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    required
-                  />
-                </div>
-
                 <p className="text-xs text-slate-400">
                   These details are stored off-chain and used only to produce
                   and deliver your physical Kaprika Press ID card.
                 </p>
+                <div>
+                  <label className="block text-sm mb-1">
+                    What does Kaprika Press ID card mean?
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700"
+                    rows={4}
+                    value="KAPRIKA.PRESS - International Media
+This card certifies that its holder is a professional
+journalist of Kaprika.Press,
+part of the international media group Kaprika Media.
+It identifies the bearer as a member of the press and grants
+access to events
+and locations of journalistic interest.
+The card is recognized by governmental and
+public institutions,
+international organizations,
+and press services as proof of journalistic status.
+The bearer respectfully requests all competent
+authorities and officials
+provide assistance and cooperation necessary
+for the professional duties of a journalist,
+including access to information,
+safety, and freedom of reporting within the European Union
+and other regions worldwide.
+"
+                  />
+                </div>
+
+
               </fieldset>
 
               {/* Submit + status inside the form */}
