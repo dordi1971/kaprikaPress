@@ -64,7 +64,7 @@ function CardPreview({
 
   const now = new Date()
   const expiration = new Date(
-    now.getFullYear() + 1,
+    now.getFullYear() + 2,
     now.getMonth(),
     now.getDate(),
   )
