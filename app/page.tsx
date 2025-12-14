@@ -237,9 +237,10 @@ export default function HomePage() {
   const hasPhoto = !!photoPreview
 
   const hasDeliveryCore =
-    email.trim() !== '' && phone.trim() !== '' && deliveryAddress.trim() !== ''
+    email.trim() !== '' && phone.trim()
 
   const isFormComplete = hasCardCore && hasPhoto && hasDeliveryCore
+  const isMintDisabled = isSubmitting || !isConnected || !isFormComplete
 
   let statusLabel: string
 
@@ -265,6 +266,10 @@ export default function HomePage() {
   const handleMint = async (mode: PaymentMode) => {
     if (!isConnected || !address) {
       setErrorMessage('Wallet not connected.')
+      return
+    }
+    if (!isFormComplete) {
+      setErrorMessage('Please fill in all required fields before minting.')
       return
     }
 
@@ -599,19 +604,14 @@ export default function HomePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm mb-1">
-                      Delivery address (for physical card)
+                      Email (Optional)
                     </label>
-                    <textarea
+                    <input
                       className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700"
-                      rows={3}
-                      value={deliveryAddress}
-                      onChange={(e) => setDeliveryAddress(e.target.value)}
-                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                     />
-                    <p className="mt-1 text-[10px] text-slate-500">
-                      Include country, city, ZIP / postcode and any delivery
-                      instructions.
-                    </p>
+
                   </div>
 
                   <div>
@@ -626,6 +626,24 @@ export default function HomePage() {
                       name="phone"
                     />
                   </div>
+
+
+                </div>
+                <div>
+                  <label className="block text-sm mb-1">
+                    Delivery address (for physical card)
+                  </label>
+                  <textarea
+                    className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700"
+                    rows={2}
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    required
+                  />
+                  <p className="mt-1 text-[10px] text-slate-500">
+                    Include country, city, ZIP / postcode and any delivery
+                    instructions.
+                  </p>
                 </div>
                 <p className="text-xs text-slate-400">
                   These details are stored off-chain and used only to produce
@@ -636,8 +654,8 @@ export default function HomePage() {
                     What does Kaprika Press ID card mean?
                   </label>
                   <textarea
-                    className="w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700"
-                    rows={4}
+                    className="text-xs w-full px-3 py-2 rounded-md bg-slate-800 border border-slate-700"
+                    rows={7}
                     value="KAPRIKA.PRESS - International Media
 This card certifies that its holder is a professional
 journalist of Kaprika.Press,
@@ -669,30 +687,34 @@ and other regions worldwide.
                   {/* Primary: always available – mint with USDC */}
                   <button
                     type="button"
-                    disabled={isSubmitting || !isConnected}
+                    disabled={isMintDisabled}
                     onClick={() => handleMint('USDC')}
-                    className={`px-4 py-2 rounded-md font-medium ${isSubmitting || !isConnected
-                      ? 'bg-slate-500 cursor-not-allowed'
-                      : 'bg-emerald-500 hover:bg-emerald-600'
-                      } text-white transition-colors`}
+                    className={`px-4 py-2 rounded-md font-medium text-white transition-colors
+    ${isMintDisabled
+                        ? 'bg-slate-600 opacity-60 cursor-not-allowed'
+                        : 'bg-emerald-500 hover:bg-emerald-600 cursor-pointer'
+                      }`}
                   >
-                    {isSubmitting ? 'Minting, please wait…' : 'Mint with USDC'}
+                    {isSubmitting ? 'Minting, please wait…' : 'Mint with USDC (' + Number(mintPriceRaw) / 1000000 + ' USD)'}
                   </button>
+
 
                   {/* Secondary: visible only if wallet holds enough kUSD */}
                   {hasEnoughKUSD && (
                     <button
                       type="button"
-                      disabled={isSubmitting || !isConnected}
+                      disabled={isMintDisabled}
                       onClick={() => handleMint('KUSD')}
-                      className={`px-4 py-2 rounded-md font-medium ${isSubmitting || !isConnected
-                        ? 'bg-slate-500 cursor-not-allowed'
-                        : 'bg-indigo-500 hover:bg-indigo-600'
-                        } text-white transition-colors`}
+                      className={`px-4 py-2 rounded-md font-medium text-white transition-colors
+      ${isMintDisabled
+                          ? 'bg-slate-600 opacity-60 cursor-not-allowed'
+                          : 'bg-indigo-500 hover:bg-indigo-600 cursor-pointer'
+                        }`}
                     >
                       {isSubmitting ? 'Minting, please wait…' : 'Mint with kUSD'}
                     </button>
                   )}
+
                 </div>
 
 
