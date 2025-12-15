@@ -452,7 +452,7 @@ export default function HomePage() {
                 href="/ambassador"
                 className="px-3 py-1 text-xs rounded-md border border-sky-400/70 text-sky-200 hover:bg-sky-500/10"
               >
-                Personal Account
+                Ambassadors Personal Account
               </a>
             )}
 
