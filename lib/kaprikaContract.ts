@@ -27,11 +27,7 @@ const kaprikaPressIdAbi = [
   },
 ] as const
 
-let cachedContract: ReturnType<typeof getContract> | null = null
-
-export function getKaprikaContract() {
-  if (cachedContract) return cachedContract
-
+function createKaprikaContract() {
   const privateKey = process.env.ADMIN_PRIVATE_KEY
   const rpcUrl = process.env.RPC_URL
   const contractAddress = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS
@@ -52,11 +48,19 @@ export function getKaprikaContract() {
     transport: http(rpcUrl),
   })
 
-  cachedContract = getContract({
+  return getContract({
     address: contractAddress as `0x${string}`,
     abi: kaprikaPressIdAbi,
     client: walletClient,
   })
+}
+
+let cachedContract: ReturnType<typeof createKaprikaContract> | null = null
+
+export function getKaprikaContract() {
+  if (!cachedContract) {
+    cachedContract = createKaprikaContract()
+  }
 
   return cachedContract
 }
