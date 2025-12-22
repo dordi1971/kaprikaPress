@@ -3,23 +3,6 @@ import { createWalletClient, http, getContract } from 'viem'
 import { polygonAmoy } from 'viem/chains'
 import { privateKeyToAccount } from 'viem/accounts'
 
-const privateKey = process.env.ADMIN_PRIVATE_KEY
-const rpcUrl = process.env.RPC_URL
-const contractAddress = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS
-
-if (!privateKey) throw new Error('ADMIN_PRIVATE_KEY is not set')
-if (!rpcUrl) throw new Error('RPC_URL is not set')
-if (!contractAddress) throw new Error('NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS is not set')
-
-// Admin account (owner of the KaprikaPressID contract)
-const account = privateKeyToAccount(`0x${privateKey}`)
-
-export const walletClient = createWalletClient({
-  account,
-  chain: polygonAmoy, // change if you use another chain
-  transport: http(rpcUrl),
-})
-
 // Minimal ABI for KaprikaPressID – only what we need now
 const kaprikaPressIdAbi = [
   {
@@ -44,8 +27,36 @@ const kaprikaPressIdAbi = [
   },
 ] as const
 
-export const kaprikaContract = getContract({
-  address: contractAddress as `0x${string}`,
-  abi: kaprikaPressIdAbi,
-  client: walletClient,
-})
+let cachedContract: ReturnType<typeof getContract> | null = null
+
+export function getKaprikaContract() {
+  if (cachedContract) return cachedContract
+
+  const privateKey = process.env.ADMIN_PRIVATE_KEY
+  const rpcUrl = process.env.RPC_URL
+  const contractAddress = process.env.NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS
+
+  if (!privateKey) throw new Error('ADMIN_PRIVATE_KEY is not set')
+  if (!rpcUrl) throw new Error('RPC_URL is not set')
+  if (!contractAddress) throw new Error('NEXT_PUBLIC_KAPRIKA_PRESS_ID_ADDRESS is not set')
+
+  // Admin account (owner of the KaprikaPressID contract)
+  const formattedPrivateKey = privateKey.startsWith('0x')
+    ? privateKey
+    : `0x${privateKey}`
+  const account = privateKeyToAccount(formattedPrivateKey as `0x${string}`)
+
+  const walletClient = createWalletClient({
+    account,
+    chain: polygonAmoy, // change if you use another chain
+    transport: http(rpcUrl),
+  })
+
+  cachedContract = getContract({
+    address: contractAddress as `0x${string}`,
+    abi: kaprikaPressIdAbi,
+    client: walletClient,
+  })
+
+  return cachedContract
+}

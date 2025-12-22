@@ -1,7 +1,7 @@
 // app/api/admin/cards/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { getAllCards, updateCard } from '@/lib/cardStore'
-import { kaprikaContract } from '@/lib/kaprikaContract'
+import { getKaprikaContract } from '@/lib/kaprikaContract'
 
 export const runtime = 'nodejs'
 
@@ -55,6 +55,7 @@ export async function PATCH(req: NextRequest) {
         // On-chain revoke if requested and tokenId is known
         if (revoked === true && typeof tokenId === 'number') {
             try {
+                const kaprikaContract = getKaprikaContract()
                 await kaprikaContract.write.setRevoked([BigInt(tokenId), true])
             } catch (err) {
                 console.error('setRevoked on-chain failed:', err)
